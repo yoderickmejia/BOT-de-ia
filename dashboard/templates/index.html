@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Bot Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0f1a;
+      --surface:  #131927;
+      --border:   #1e2d45;
+      --accent:   #1a6cff;
+      --green:    #00c896;
+      --red:      #ff4d6a;
+      --text:     #e0e6f0;
+      --muted:    #6b7a9a;
+      --card-r:   12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand { font-size: 1.25rem; font-weight: 700; letter-spacing: .5px; }
+    .brand span { color: var(--accent); }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-r);
+      padding: 10px 20px;
+      flex-wrap: wrap;
+    }
+    .status-indicator {
+      display: flex; align-items: center; gap: 8px; font-size: .875rem;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 6px var(--muted);
+      transition: background .4s, box-shadow .4s;
+    }
+    .dot.online  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot.offline { background: var(--red);   box-shadow: 0 0 8px var(--red);   }
+
+    .live-val { font-size: .875rem; }
+    .live-val strong { color: var(--text); margin-left: 4px; }
+    .label { color: var(--muted); }
+
+    /* ── Stat cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-r);
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .card .card-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+    .card .card-value { font-size: 1.75rem; font-weight: 700; }
+    .card .card-value.green { color: var(--green); }
+    .card .card-value.red   { color: var(--red); }
+    .card .card-value.blue  { color: var(--accent); }
+    .card .card-sub { font-size: .8rem; color: var(--muted); }
+
+    /* ── Chart ── */
+    .chart-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-r);
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-size: .875rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .6px;
+      color: var(--muted); margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* ── Table ── */
+    .table-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-r);
+      padding: 20px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    thead th {
+      text-align: left; color: var(--muted);
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .6px;
+      padding: 0 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody td { padding: 11px 12px; vertical-align: middle; }
+    .pill {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: .75rem; font-weight: 600;
+    }
+    .pill.buy  { background: rgba(0,200,150,.15); color: var(--green); }
+    .pill.sell { background: rgba(255,77,106,.15); color: var(--red); }
+    .profit { color: var(--green); }
+    .loss   { color: var(--red);   }
+    .empty-row td { text-align: center; color: var(--muted); padding: 32px; }
+
+    /* ── Refresh hint ── */
+    .refresh-hint { text-align: right; font-size: .72rem; color: var(--muted); margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Trading<span>Bot</span> Dashboard</div>
+  <div class="status-bar">
+    <div class="status-indicator">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText" class="label">Cargando...</span>
+    </div>
+    <div class="live-val"><span class="label">BTC/USDT</span><strong id="livePrice">—</strong></div>
+    <div class="live-val"><span class="label">RSI</span><strong id="liveRsi">—</strong></div>
+    <div class="live-val"><span class="label">EMA R</span><strong id="liveEma">—</strong></div>
+  </div>
+</header>
+
+<!-- Cards -->
+<div class="cards">
+  <div class="card">
+    <div class="card-label">Total Operaciones</div>
+    <div class="card-value blue" id="cTotal">—</div>
+    <div class="card-sub">cerradas</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Tasa de Acierto</div>
+    <div class="card-value" id="cWinRate">—</div>
+    <div class="card-sub" id="cWL">— ganadas / — perdidas</div>
+  </div>
+  <div class="card">
+    <div class="card-label">P&amp;L Total</div>
+    <div class="card-value" id="cPnl">—</div>
+    <div class="card-sub">USDT acumulado</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Posicion Abierta</div>
+    <div class="card-value" id="cPos">—</div>
+    <div class="card-sub" id="cPosSub"></div>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-section">
+  <div class="section-title">P&amp;L Acumulado</div>
+  <div class="chart-wrap">
+    <canvas id="pnlChart"></canvas>
+  </div>
+</div>
+
+<!-- Trade table -->
+<div class="table-section">
+  <div class="section-title">Historial de Operaciones</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Par</th>
+        <th>Lado</th>
+        <th>Entrada</th>
+        <th>Salida</th>
+        <th>P&amp;L ($)</th>
+        <th>P&amp;L (%)</th>
+        <th>Razon</th>
+        <th>Fecha Cierre</th>
+      </tr>
+    </thead>
+    <tbody id="tradeBody">
+      <tr class="empty-row"><td colspan="9">Cargando operaciones...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="refresh-hint">Actualizacion automatica cada 10 segundos</div>
+
+<script>
+  // ── Chart setup ──────────────────────────────────────────────────────────
+  const ctx = document.getElementById('pnlChart').getContext('2d');
+  const pnlChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'P&L Acumulado (USDT)',
+        data: [],
+        borderColor: '#1a6cff',
+        backgroundColor: 'rgba(26,108,255,.08)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#1a6cff',
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` $${ctx.parsed.y.toFixed(4)}`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7a9a', maxTicksLimit: 10, font: { size: 11 } }, grid: { color: '#1e2d45' } },
+        y: { ticks: { color: '#6b7a9a', font: { size: 11 }, callback: v => `$${v}` }, grid: { color: '#1e2d45' } }
+      }
+    }
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const fmt = (v, dec=2) => v != null ? Number(v).toFixed(dec) : '—';
+  const fmtDate = s => s ? s.replace('T', ' ').substring(0, 16) : '—';
+
+  function setCard(id, value, cls) {
+    const el = document.getElementById(id);
+    el.textContent = value;
+    el.className = 'card-value' + (cls ? ' ' + cls : '');
+  }
+
+  // ── Fetch status ──────────────────────────────────────────────────────────
+  async function fetchStatus() {
+    try {
+      const r = await fetch('/api/status');
+      const d = await r.json();
+
+      document.getElementById('livePrice').textContent = d.price ? `$${Number(d.price).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2})}` : '—';
+      document.getElementById('liveRsi').textContent   = d.rsi   ? fmt(d.rsi, 1) : '—';
+
+      const ratio = d.ema_fast && d.ema_slow ? (d.ema_fast / d.ema_slow).toFixed(4) : '—';
+      document.getElementById('liveEma').textContent = ratio;
+
+      const dot  = document.getElementById('statusDot');
+      const txt  = document.getElementById('statusText');
+      let online = false;
+      if (d.last_update) {
+        const secs = (Date.now() - new Date(d.last_update).getTime()) / 1000;
+        online = secs < 60;
+      }
+      dot.className = 'dot ' + (online ? 'online' : 'offline');
+      txt.textContent = online ? 'Bot en linea' : 'Bot desconectado';
+
+      // Open position card
+      const posEl   = document.getElementById('cPos');
+      const posSub  = document.getElementById('cPosSub');
+      if (d.open_position) {
+        posEl.textContent = 'SI';
+        posEl.className   = 'card-value green';
+        posSub.textContent = `Precio actual: $${fmt(d.price, 2)}`;
+      } else {
+        posEl.textContent = 'NO';
+        posEl.className   = 'card-value';
+        posSub.textContent = 'Sin posicion abierta';
+      }
+    } catch(e) {
+      document.getElementById('statusDot').className = 'dot offline';
+      document.getElementById('statusText').textContent = 'Error de conexion';
+    }
+  }
+
+  // ── Fetch summary ─────────────────────────────────────────────────────────
+  async function fetchSummary() {
+    try {
+      const r = await fetch('/api/summary');
+      const d = await r.json();
+      setCard('cTotal', d.total_trades, 'blue');
+
+      const wrCls = d.win_rate >= 50 ? 'green' : (d.win_rate > 0 ? '' : 'red');
+      setCard('cWinRate', `${d.win_rate}%`, wrCls);
+      document.getElementById('cWL').textContent = `${d.wins} ganadas / ${d.losses} perdidas`;
+
+      const pnlCls = d.total_pnl >= 0 ? 'green' : 'red';
+      setCard('cPnl', `$${fmt(d.total_pnl, 4)}`, pnlCls);
+    } catch(e) {}
+  }
+
+  // ── Fetch trades ──────────────────────────────────────────────────────────
+  async function fetchTrades() {
+    try {
+      const r  = await fetch('/api/trades');
+      const ds = await r.json();
+      const tbody = document.getElementById('tradeBody');
+
+      if (!ds.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Sin operaciones registradas</td></tr>';
+        return;
+      }
+
+      // Build table rows (already sorted DESC; reverse for chart)
+      tbody.innerHTML = ds.map(t => {
+        const pnlCls  = (t.pnl ?? 0) >= 0 ? 'profit' : 'loss';
+        const pctCls  = (t.pnl_pct ?? 0) >= 0 ? 'profit' : 'loss';
+        const side    = (t.side || '').toLowerCase();
+        return `<tr>
+          <td style="color:var(--muted)">${t.id}</td>
+          <td>${t.symbol || '—'}</td>
+          <td><span class="pill ${side}">${(t.side || '—').toUpperCase()}</span></td>
+          <td>$${fmt(t.entry_price, 2)}</td>
+          <td>${t.exit_price != null ? '$'+fmt(t.exit_price,2) : '—'}</td>
+          <td class="${pnlCls}">${t.pnl != null ? '$'+fmt(t.pnl,4) : '—'}</td>
+          <td class="${pctCls}">${t.pnl_pct != null ? fmt(t.pnl_pct,2)+'%' : '—'}</td>
+          <td style="color:var(--muted)">${t.reason || '—'}</td>
+          <td style="color:var(--muted)">${fmtDate(t.closed_at)}</td>
+        </tr>`;
+      }).join('');
+
+      // Update chart with cumulative PnL (oldest first)
+      const closed = ds.filter(t => t.status === 'closed' && t.pnl != null).reverse();
+      let cum = 0;
+      const labels = [], data = [];
+      closed.forEach((t, i) => {
+        cum += Number(t.pnl);
+        labels.push(fmtDate(t.closed_at) || `#${i+1}`);
+        data.push(parseFloat(cum.toFixed(4)));
+      });
+      pnlChart.data.labels   = labels;
+      pnlChart.data.datasets[0].data = data;
+      // Color line based on final pnl
+      const lineColor = (cum >= 0) ? '#00c896' : '#ff4d6a';
+      pnlChart.data.datasets[0].borderColor     = lineColor;
+      pnlChart.data.datasets[0].pointBackgroundColor = lineColor;
+      pnlChart.data.datasets[0].backgroundColor = cum >= 0 ? 'rgba(0,200,150,.08)' : 'rgba(255,77,106,.08)';
+      pnlChart.update('none');
+    } catch(e) {}
+  }
+
+  // ── Refresh all ───────────────────────────────────────────────────────────
+  async function refreshAll() {
+    await Promise.all([fetchStatus(), fetchSummary(), fetchTrades()]);
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0b0f19;
+  color: #e2e8f0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1e2d45;
+}
+
+.header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e88; }
+.status-dot.offline { background: #ef4444; }
+
+.last-update {
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+/* Stat cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.card-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1;
+}
+
+.card-value.green { color: #22c55e; }
+.card-value.red   { color: #ef4444; }
+.card-value.blue  { color: #38bdf8; }
+.card-value.small { font-size: 1.1rem; margin-top: 4px; }
+
+.card-sub {
+  font-size: 0.78rem;
+  color: #475569;
+  margin-top: 6px;
+}
+
+/* Market info bar */
+.market-bar {
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  gap: 40px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.market-item label {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.market-item span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.rsi-value { color: #a78bfa !important; }
+
+/* Chart */
+.chart-section {
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+/* Trades table */
+.trades-section {
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid #1e2d45;
+}
+
+tbody tr {
+  border-bottom: 1px solid #0f172a;
+  transition: background 0.15s;
+}
+
+tbody tr:hover {
+  background: #0f172a;
+}
+
+tbody td {
+  padding: 12px 14px;
+  color: #cbd5e1;
+}
+
+.pnl-positive { color: #22c55e; font-weight: 600; }
+.pnl-negative { color: #ef4444; font-weight: 600; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-open   { background: #1e3a5f; color: #38bdf8; }
+.badge-closed { background: #1a2e1a; color: #86efac; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #475569;
+  font-size: 0.9rem;
+}
